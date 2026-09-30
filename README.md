@@ -1,14 +1,22 @@
 # 🇸🇬 SG Job Matchmaker & AI Agent Console
 
 > **Next-Generation AI ATS Resume Matcher, Web Job Discovery Engine, and Hiring Simulator tailored for the Singapore Tech Ecosystem.**
+
 ![Status](https://img.shields.io/badge/Status-Active%20Release-00f2fe?style=for-the-badge)
+
 ![Singapore](https://img.shields.io/badge/Market-Singapore%20Tech-ff2a5f?style=for-the-badge)
+
 ![Localhost](https://img.shields.io/badge/Localhost-Port%208080-10b981?style=for-the-badge)
+
 ![License](https://img.shields.io/badge/License-MIT-d832ff?style=for-the-badge)
+
 ---
+
 ## 📌 Overview
+
 **SG Job Matchmaker** is an interactive, browser-based career intelligence platform designed specifically for job seekers and hiring professionals in Singapore. It bridges the gap between applicant resumes and employer requirements by combining **client-side PDF parsing**, **live Singapore job market discovery** (MyCareersFuture, LinkedIn SG, Careers@Gov), **multi-factor ATS compatibility scoring**, and an **end-to-end 5-step recruitment simulator**.
 The application operates as a standalone web app with zero complex build tooling or external framework dependencies, and runs seamlessly on **`http://localhost:8080`**.
+
 ---
 ## ✨ Key Features
 ### 1. 🎯 Dual Matching Modalities
