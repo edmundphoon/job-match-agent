@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SG Job Matchmaker & AI Agent Console</title>
+    <!-- Google Fonts: Inter & Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <!-- PDF.js library for client-side PDF parsing (local file with CDN fallback) -->
+    <script src="pdf.min.js"></script>
+    <script>
+        if (!window.pdfjsLib) {
+            document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"><\\/script>');
+        }
+    </script>
+</head>
+<body>
+    <!-- Top Glowing Border Decoration -->
+    <div class="glow-bar"></div>
+
+    <!-- Header Section -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo-area">
+                <div class="logo-orb"></div>
+                <h1>SG Job <span class="gradient-text">Matchmaker</span></h1>
+                <span class="badge beta-badge">AI Agent Beta</span>
+            </div>
+            <!-- Live Ticker for SG Job Market Data -->
+            <div class="ticker-wrap">
+                <div class="ticker-title"><i class="fa-solid fa-chart-line"></i> SG Market Ticker:</div>
+                <div class="ticker-marquee-box">
+                    <div class="ticker" id="market-ticker">
+                        <span class="ticker-item">Loading live Singapore job market data feeds...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="app-container">
+        <!-- Mode Toggle Bar -->
+        <div class="mode-toggle-container">
+            <button class="mode-btn active" id="btn-mode-preset"><i class="fa-solid fa-layer-group"></i> Preset Matcher Mode</button>
+            <button class="mode-btn" id="btn-mode-custom"><i class="fa-solid fa-sliders"></i> Custom Sandbox Matcher</button>
+        </div>
+
+        <!-- Dashboard Bento Grid -->
+        <div class="bento-grid" id="dashboard-grid">
+            
+            <!-- CARD 1: Profile Selector & Stats / Paste Job Description -->
+            <div class="bento-card card-profile" id="card-profile">
+                <!-- Preset View -->
+                <div class="preset-view">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-user-tie"></i></div>
+                        <h3>Candidate Profile</h3>
+                    </div>
+                    <div class="profile-selector">
+                        <label for="profile-select">Select Mock Candidate:</label>
+                        <select id="profile-select" class="custom-select">
+                            <option value="dev_kai">Kai Chen (Frontend Dev / UI Specialist)</option>
+                            <option value="data_siti">Siti Nurhaliza (Data Analyst / BI Dev)</option>
+                            <option value="mkt_rahul">Rahul Sharma (Digital Marketing Lead)</option>
+                        </select>
+                    </div>
+                    <div class="profile-brief" id="profile-brief">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Custom View -->
+                <div class="custom-view" style="display: none;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="card-icon"><i class="fa-solid fa-file-invoice"></i></div>
+                            <h3>1. Job Description</h3>
+                        </div>
+                        <button type="button" class="web-search-header-btn" id="btn-browse-web-jobs" title="Scan Singapore portals to discover active roles">
+                            <i class="fa-solid fa-earth-asia"></i> Scan Job Portals
+                        </button>
+                    </div>
+                    <div class="textarea-container">
+                        <textarea id="custom-job-desc" placeholder="Paste the job description or requirements here... Or click 'Scan Job Portals' above to find roles!"></textarea>
+                    </div>
+                    <div class="job-desc-footer-tools">
+                        <span class="footer-hint"><i class="fa-solid fa-wand-magic-sparkles"></i> Need a job role?</span>
+                        <button type="button" class="btn-text-action" id="btn-quick-scan-jobs">
+                            <i class="fa-solid fa-magnifying-glass-location"></i> Browse Active Roles from SG Portals
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 2: Search & Filter Panel / Paste Applicant Resume -->
+            <div class="bento-card card-filters" id="card-filters">
+                <!-- Preset View -->
+                <div class="preset-view">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+                        <h3>Job Discovery</h3>
+                    </div>
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" id="search-input" placeholder="Search roles, skills, or companies...">
+                    </div>
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="mrt-filter"><i class="fa-solid fa-train-subway"></i> MRT Line:</label>
+                            <select id="mrt-filter" class="custom-select">
+                                <option value="all">All Transit Lines</option>
+                                <option value="EWL">East-West Line (Green)</option>
+                                <option value="NSL">North-South Line (Red)</option>
+                                <option value="CCL">Circle Line (Yellow)</option>
+                                <option value="DTL">Downtown Line (Blue)</option>
+                                <option value="NEL">North-East Line (Purple)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="industry-tags" id="industry-tags">
+                        <span class="tag active" data-industry="all">All Jobs</span>
+                        <span class="tag" data-industry="Tech">Technology</span>
+                        <span class="tag" data-industry="Finance">Finance</span>
+                        <span class="tag" data-industry="Marketing">Creative & Marketing</span>
+                        <span class="tag" data-industry="Data">Data & BI</span>
+                    </div>
+                </div>
+
+                <!-- Custom View -->
+                <div class="custom-view" style="display: none;">
+                    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="card-icon"><i class="fa-solid fa-address-card"></i></div>
+                            <h3>2. Paste Applicant Resume</h3>
+                        </div>
+                        <!-- Sleek upload link -->
+                        <div class="file-upload-header-link">
+                            <label for="resume-file-input" class="upload-link-label">
+                                <i class="fa-solid fa-file-arrow-up"></i> Upload .txt / .pdf
+                            </label>
+                            <input type="file" id="resume-file-input" accept=".txt,.pdf" style="display: none;" />
+                        </div>
+                    </div>
+                    <div class="textarea-container dropzone" id="resume-dropzone">
+                        <textarea id="custom-resume-text" placeholder="Paste resume here, or drag & drop a text (.txt) or PDF (.pdf) file..."></textarea>
+                        <!-- Visual File Attachment Card -->
+                        <div id="file-attachment-card" class="file-attachment-card" style="display: none;">
+                            <div class="file-card-content">
+                                <button class="file-card-remove" id="btn-remove-file" onclick="detachResumeFile(event)">
+                                    <i class="fa-solid fa-xmark"></i>
+                                </button>
+                                <div class="pdf-icon-wrapper">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </div>
+                                <span class="file-card-name" id="file-card-name">resume.pdf</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 3: Job Listings Panel / Action Center -->
+            <div class="bento-card card-listings" id="card-listings">
+                <!-- Preset View -->
+                <div class="preset-view">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-briefcase"></i></div>
+                        <h3>Recent Opportunities</h3>
+                        <span class="count-badge" id="job-count">0 Jobs Found</span>
+                    </div>
+                    <div class="jobs-list" id="jobs-container">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+
+                <!-- Custom View -->
+                <div class="custom-view" style="display: none;">
+                    <div class="card-header">
+                        <div class="card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                        <h3>3. Rank Match Actions</h3>
+                    </div>
+                    <div class="custom-actions-panel">
+                        <p class="custom-instructions">Evaluate compatibility between the job description in Section 1 and applicant credentials in Section 2.</p>
+                        <button class="btn btn-primary btn-rank-match" id="btn-analyze-custom">
+                            Analyze & Rank Match <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        </button>
+                        <div class="custom-sandbox-status" id="custom-sandbox-status">
+                            <i class="fa-solid fa-circle-question"></i> Awaiting custom data inputs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CARD 4: AI Agent Console (The brain of matchmaking) -->
+            <div class="bento-card card-agent" id="card-agent">
+                <div class="card-header">
+                    <div class="card-icon agent-pulse"><i class="fa-solid fa-robot"></i></div>
+                    <h3>AI Job-Market Agent</h3>
+                    <span class="agent-status" id="agent-status">Online</span>
+                </div>
+                <div class="agent-terminal">
+                    <div class="terminal-logs" id="terminal-logs">
+                        <!-- Loaded dynamically -->
+                    </div>
+                </div>
+                <div class="agent-actions">
+                    <button class="btn btn-secondary btn-sm" id="btn-optimize-resume">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Optimize Resume
+                    </button>
+                    <button class="btn btn-secondary btn-sm" id="btn-market-report">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Generate Market Insights
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD 5: Matchmaking Core Indicator -->
+            <div class="bento-card card-match" id="card-match">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-bullseye"></i></div>
+                    <h3>Match Analysis</h3>
+                </div>
+                <div class="match-score-section">
+                    <div class="score-circle-wrapper">
+                        <svg class="score-ring" width="120" height="120">
+                            <circle class="score-ring-bg" stroke="rgba(255,255,255,0.05)" stroke-width="8" fill="transparent" r="50" cx="60" cy="60"/>
+                            <circle class="score-ring-progress" id="score-progress" stroke="url(#score-grad)" stroke-width="8" stroke-dasharray="314.16" stroke-dashoffset="314.16" stroke-linecap="round" fill="transparent" r="50" cx="60" cy="60"/>
+                            <defs>
+                                <linearGradient id="score-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#00F2FE" />
+                                    <stop offset="100%" stop-color="#FF3366" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                        <div class="score-text">
+                            <span class="percent" id="match-percent">--%</span>
+                            <span class="label">Fit Rating</span>
+                        </div>
+                    </div>
+                    <div class="match-meta">
+                        <h4 id="match-verdict">Select a job opportunity to run match assessment</h4>
+                        <p id="match-explanation">The agent will analyze requirements against your dynamic resume.</p>
+                    </div>
+                </div>
+                
+                <div class="skills-gap-analysis">
+                    <div class="analysis-section" style="width: 100%; grid-column: span 1;">
+                        <h4 id="matched-label"><i class="fa-solid fa-check" style="color:var(--accent-success)"></i> Matched Core Skills & Keywords:</h4>
+                        <div class="keyword-tags" id="matched-keywords">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                    
+                    <!-- Preset Only: SkillsFuture course recommendations -->
+                    <div class="analysis-section preset-view" id="skillsfuture-section" style="width: 100%; grid-column: span 1;">
+                        <h4>💡 SkillsFuture Recommendation</h4>
+                        <div class="skillsfuture-recommendation" id="skillsfuture-rec">
+                            <i class="fa-solid fa-graduation-cap"></i> Select a job to view recommended courses.
+                        </div>
+                    </div>
+                    
+                    <!-- Custom Only: Missing Core Gaps -->
+                    <div class="analysis-section custom-view" id="missing-section" style="display: none; width: 100%; grid-column: span 1;">
+                        <h4 id="missing-label"><i class="fa-solid fa-xmark" style="color:var(--accent-orchid)"></i> Missing Core Skills & Gaps:</h4>
+                        <div class="keyword-tags" id="missing-keywords">
+                            <!-- Loaded dynamically -->
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="btn-beta-apply" style="width: 100%; margin-top: 1.25rem; display: none;">
+                    Run Beta Application <i class="fa-solid fa-circle-play"></i>
+                </button>
+            </div>
+
+            <!-- CARD 6: Dynamic Resume Portfolio (Adapts contextually) -->
+            <div class="bento-card card-resume" id="card-resume">
+                <div class="card-header">
+                    <div class="card-icon"><i class="fa-solid fa-address-card"></i></div>
+                    <h3>Dynamic Portfolio Resume</h3>
+                    <span class="resume-badge" id="resume-mode">Static Mode</span>
+                </div>
+                <div class="resume-workspace" id="resume-workspace">
+                    <!-- Filled dynamically with adaptive sections -->
+                    <div class="resume-placeholder-text">
+                        <i class="fa-solid fa-address-card" style="font-size: 3rem; opacity: 0.15; margin-bottom: 1rem;"></i>
+                        <p>Loading resume details...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Slide-Out Beta Run Application Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay"></div>
+    <div class="app-drawer" id="app-drawer">
+        <button class="drawer-close" id="drawer-close"><i class="fa-solid fa-xmark"></i></button>
+        
+        <div class="drawer-header">
+            <h2>Beta Application Simulator</h2>
+            <p id="drawer-job-title">Senior Frontend Developer @ GovTech</p>
+        </div>
+
+        <div class="drawer-content">
+            <!-- Simulated Steps Tracker -->
+            <div class="pipeline-tracker">
+                <div class="step active" id="step-1" data-step="1">
+                    <div class="step-num">1</div>
+                    <span class="step-label">Draft & Apply</span>
+                </div>
+                <div class="step" id="step-2" data-step="2">
+                    <div class="step-num">2</div>
+                    <span class="step-label">Resume Scan</span>
+                </div>
+                <div class="step" id="step-3" data-step="3">
+                    <div class="step-num">3</div>
+                    <span class="step-label">Assessment</span>
+                </div>
+                <div class="step" id="step-4" data-step="4">
+                    <div class="step-num">4</div>
+                    <span class="step-label">Interview</span>
+                </div>
+                <div class="step" id="step-5" data-step="5">
+                    <div class="step-num">5</div>
+                    <span class="step-label">Decision</span>
+                </div>
+            </div>
+
+            <!-- Pipeline Workspace Panels -->
+            <div class="pipeline-panels">
+                
+                <!-- PANEL 1: Cover Letter Generator & Draft -->
+                <div class="pipeline-panel active" id="panel-step-1">
+                    <h3>Draft Cover Letter</h3>
+                    <p>The AI Agent will auto-generate a custom cover letter mapped directly from your dynamic resume to this job's specific requirements.</p>
+                    
+                    <div class="ai-box">
+                        <div class="ai-box-header">
+                            <span class="ai-title"><i class="fa-solid fa-wand-magic-sparkles"></i> Agent Copilot Draft</span>
+                            <button class="btn btn-secondary btn-xs" id="btn-regenerate-letter"><i class="fa-solid fa-rotate"></i> Regenerate</button>
+                        </div>
+                        <div class="cover-letter-paper">
+                            <pre class="typewriter-text" id="cover-letter-content">Clicking "Generate Cover Letter" will stream the AI's proposal...</pre>
+                        </div>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button class="btn btn-primary" id="btn-submit-application">
+                            Submit Application <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL 2: Resume Screening Screen -->
+                <div class="pipeline-panel" id="panel-step-2">
+                    <h3>AI Applicant Screening System (ATS)</h3>
+                    <p>GovTech's automated screening system is scanning your adaptive profile resume against the core requirements.</p>
+                    
+                    <div class="ats-monitor">
+                        <div class="scan-bar-container">
+                            <div class="scan-bar" id="scan-progress-bar"></div>
+                        </div>
+                        <div class="ats-console" id="ats-console-logs">
+                            <!-- Screen updates here -->
+                        </div>
+                    </div>
+                    
+                    <div class="panel-actions" style="display: none;" id="ats-actions">
+                        <button class="btn btn-primary" id="btn-proceed-assessment">
+                            Proceed to Technical Assessment <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL 3: Technical Skills Assessment Quiz -->
+                <div class="pipeline-panel" id="panel-step-3">
+                    <h3>Mock Technical Assessment</h3>
+                    <p>The Job-Market Agent has compiled a short, job-relevant mock quiz based on this role's tech stack to test your credentials.</p>
+                    
+                    <div class="quiz-box">
+                        <div class="quiz-header">
+                            <span class="quiz-title" id="quiz-question-title">Question 1 of 3</span>
+                            <span class="quiz-timer" id="quiz-timer">Time Left: 30s</span>
+                        </div>
+                        <div class="quiz-body">
+                            <p class="question" id="quiz-question-text">Question text loads here...</p>
+                            <div class="options-grid" id="quiz-options">
+                                <!-- Loaded dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-actions" style="display: none;" id="quiz-actions">
+                        <button class="btn btn-primary" id="btn-proceed-interview">
+                            Proceed to Virtual Interview <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL 4: Virtual Mock Interview (Agent Chat) -->
+                <div class="pipeline-panel" id="panel-step-4">
+                    <h3>Simulated AI Technical Interview</h3>
+                    <p>Answer a simulated behavioral or technical question from the Hiring Manager Agent.</p>
+                    
+                    <div class="interview-room">
+                        <div class="interview-dialog" id="interview-chat">
+                            <div class="message manager">
+                                <div class="avatar"><i class="fa-solid fa-user-tie"></i></div>
+                                <div class="msg-bubble">
+                                    <p class="sender">Hiring Manager</p>
+                                    <p id="interview-question">Welcome. Can you describe a challenging technical project where you had to solve a performance bottleneck, and how you evaluated the trade-offs?</p>
+                                </div>
+                            </div>
+                            <!-- User response streams here -->
+                        </div>
+                        <div class="interview-input-area">
+                            <textarea id="interview-input" placeholder="Type your response here (or select a premade response)..."></textarea>
+                            <div class="premade-responses-container">
+                                <label>Quick Responses:</label>
+                                <div class="premade-responses" id="premade-responses-list">
+                                    <!-- Loaded dynamically -->
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="btn-send-interview">
+                                Send Response <i class="fa-solid fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="panel-actions" style="display: none;" id="interview-actions">
+                        <button class="btn btn-primary" id="btn-proceed-decision">
+                            Submit & View Hiring Decision <i class="fa-solid fa-circle-check"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PANEL 5: Verdict & Offer Details -->
+                <div class="pipeline-panel" id="panel-step-5">
+                    <div class="verdict-banner" id="verdict-banner">
+                        <div class="verdict-icon" id="verdict-icon"><i class="fa-solid fa-trophy"></i></div>
+                        <h2 id="verdict-title">Application Status: Accepted</h2>
+                    </div>
+
+                    <div class="verdict-details-card">
+                        <div class="verdict-section">
+                            <h4>📋 Hiring Feedback</h4>
+                            <p id="verdict-feedback">Feedback details here...</p>
+                        </div>
+                        <div class="verdict-section" id="offer-section">
+                            <h4>💼 Offer Package Details</h4>
+                            <ul class="offer-bullets">
+                                <li><strong>Base Salary:</strong> <span id="offer-salary">S$ 7,500 / month</span></li>
+                                <li><strong>Location:</strong> <span id="offer-location">Mapletree Business City, Singapore</span></li>
+                                <li><strong>Benefits:</strong> Annual Wage Supplement (AWS/13th Month), CPF Contributions, S$1,200 annual learning stipend.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="panel-actions">
+                        <button class="btn btn-secondary" id="btn-close-simulator">
+                            Close & Return to Dashboard
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Slide-Out / Modal: Web Job Discovery & Matches -->
+    <div class="web-modal-overlay" id="web-modal-overlay"></div>
+    <div class="web-jobs-modal" id="web-jobs-modal">
+        <button class="modal-close-btn" id="btn-close-web-modal"><i class="fa-solid fa-xmark"></i></button>
+
+        <div class="web-modal-header">
+            <div class="web-modal-title-row">
+                <div class="globe-badge"><i class="fa-solid fa-earth-asia"></i></div>
+                <div>
+                    <h2>Live SG Web Job Matches</h2>
+                    <p id="web-modal-subtitle">Analyzing verified competencies from your resume...</p>
+                </div>
+            </div>
+            
+            <!-- Extracted skills chip bar -->
+            <div class="extracted-skills-container">
+                <span class="skills-label"><i class="fa-solid fa-brain"></i> Extracted Resume Competencies:</span>
+                <div class="extracted-skills-bar" id="extracted-skills-bar">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Live Portal External Search Links -->
+            <div class="live-portal-search-row">
+                <span class="portal-search-label"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Live Portal Searches:</span>
+                <div class="live-portal-links" id="live-portal-links">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+            
+            <!-- Filter tabs -->
+            <div class="portal-filters-row" id="portal-filters-row">
+                <button class="portal-filter-tab active" data-portal="all">All Web Matches (<span id="count-all-web">0</span>)</button>
+                <button class="portal-filter-tab" data-portal="mycareersfuture"><i class="fa-solid fa-building-columns"></i> MyCareersFuture (<span id="count-mcf-web">0</span>)</button>
+                <button class="portal-filter-tab" data-portal="linkedin"><i class="fa-brands fa-linkedin"></i> LinkedIn SG (<span id="count-linkedin-web">0</span>)</button>
+                <button class="portal-filter-tab" data-portal="careersgov"><i class="fa-solid fa-shield-halved"></i> Careers@Gov (<span id="count-gov-web">0</span>)</button>
+            </div>
+        </div>
+
+        <div class="web-modal-body">
+            <div class="web-jobs-grid" id="web-jobs-grid">
+                <!-- Populated dynamically with match cards -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Script File -->
+    <script src="app.js?v=1.0.7"></script>
+</body>
+</html>
