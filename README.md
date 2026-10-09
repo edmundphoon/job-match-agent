@@ -106,7 +106,7 @@ cd C:\Users\Edmund\.gemini\antigravity\scratch\sg-job-matchmaker
 * In Windows File Explorer, open the folder and **double-click** `start-server.bat`.
 * Or from Windows Command Prompt:
   ```cmd
-  cd C:\Users\Edmund\.gemini\antigravity\scratch\sg-job-matchmaker
+  cd \sg-job-matchmaker
   start-server.bat
   ```
 
