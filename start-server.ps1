@@ -14,9 +14,7 @@ Set-Location $scriptDir
 # Set Window Title
 try {
     $Host.UI.RawUI.WindowTitle = "SG Job Matchmaker - Localhost:$Port"
-} catch {
-    # Ignore if not supported in current host
-}
+} catch {}
 
 # Find Python executable
 $pythonCandidate = $null
@@ -40,7 +38,7 @@ if ($inPath -and $inPath.Source) {
     }
 }
 
-# If Python is available, execute server.py
+# If Python is available, execute server.py with explicit port argument
 if ($pythonCandidate) {
     Write-Host ""
     Write-Host "================================================================" -ForegroundColor Cyan
@@ -50,35 +48,46 @@ if ($pythonCandidate) {
     Write-Host "================================================================" -ForegroundColor Cyan
     Write-Host ""
     
-    & "$pythonCandidate" "$scriptDir\server.py"
+    & "$pythonCandidate" "$scriptDir\server.py" --port $Port
     exit 0
 }
 
 # ==============================================================================
-# Fallback: Pure PowerShell Native .NET HttpListener (Zero Dependencies)
+# Fallback: Pure PowerShell Native .NET HttpListener with Port Collision Detection
 # ==============================================================================
+$activePort = $Port
+$listener = $null
+$maxTries = 10
+
+for ($i = 0; $i -lt $maxTries; $i++) {
+    try {
+        $testListener = New-Object System.Net.HttpListener
+        $testListener.Prefixes.Add("http://localhost:$activePort/")
+        $testListener.Start()
+        $listener = $testListener
+        break
+    } catch {
+        Write-Host "[NOTICE] Port $activePort is occupied by another application (e.g. Primal Ball). Checking next port..." -ForegroundColor Yellow
+        $activePort++
+    }
+}
+
+if (-not $listener) {
+    Write-Host "[FATAL] Could not find any open port between $Port and $($Port + $maxTries - 1)." -ForegroundColor Red
+    exit 1
+}
+
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "  Starting Native PowerShell HTTP Server on Port $Port..." -ForegroundColor Green
-Write-Host "  Local URL: http://localhost:$Port/" -ForegroundColor Yellow
+Write-Host "  Starting Native PowerShell HTTP Server on Port $activePort..." -ForegroundColor Green
+Write-Host "  Local URL: http://localhost:$activePort/" -ForegroundColor Yellow
 Write-Host "  Serving:   $scriptDir" -ForegroundColor DarkGray
 Write-Host "  Status:    ONLINE (Press Ctrl+C to terminate)" -ForegroundColor White
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$listener = New-Object System.Net.HttpListener
-$listener.Prefixes.Add("http://localhost:$Port/")
-
-try {
-    $listener.Start()
-} catch {
-    Write-Host "Failed to start listener on port $Port : $_" -ForegroundColor Red
-    Write-Host "Ensure no other process is utilizing port $Port." -ForegroundColor Yellow
-    exit 1
-}
-
-# Auto-launch default browser
-Start-Process "http://localhost:$Port/"
+# Auto-launch default browser to the actual bound port
+Start-Process "http://localhost:$activePort/"
 
 $mimeTypes = @{
     ".html" = "text/html; charset=utf-8"
@@ -101,7 +110,9 @@ try {
         $response = $context.Response
 
         $response.Headers.Add("Access-Control-Allow-Origin", "*")
-        $response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate")
+        $response.Headers.Add("Cache-Control", "no-cache, no-store, must-revalidate, max-age=0")
+        $response.Headers.Add("Pragma", "no-cache")
+        $response.Headers.Add("Expires", "0")
 
         $localPath = $request.Url.LocalPath.TrimStart('/')
         if ([string]::IsNullOrWhiteSpace($localPath) -or $localPath -eq "/") {
