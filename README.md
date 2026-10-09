@@ -94,10 +94,10 @@ The project is pre-configured to run on **`http://localhost:8080`**. You can lau
 ### Method 1: PowerShell (Recommended)
 Open PowerShell or Windows Terminal, navigate to the folder, and run:
 ```powershell
-cd C:\Users\Edmund\.gemini\antigravity\scratch\sg-job-matchmaker
+cd C:\Users\Edmund\Documents\agy2-projects\job-market-agent
 .\start-server.ps1
 ```
-*Tip: You can specify a custom port if 8080 is in use:*
+*Tip: If port 8080 is in use, the server automatically selects the next available port, or you can specify a custom port:*
 ```powershell
 .\start-server.ps1 -Port 3000
 ```
@@ -106,7 +106,7 @@ cd C:\Users\Edmund\.gemini\antigravity\scratch\sg-job-matchmaker
 * In Windows File Explorer, open the folder and **double-click** `start-server.bat`.
 * Or from Windows Command Prompt:
   ```cmd
-  cd \sg-job-matchmaker
+  cd C:\Users\Edmund\Documents\agy2-projects\job-market-agent
   start-server.bat
   ```
 
